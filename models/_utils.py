@@ -1,8 +1,14 @@
-import re
+import re, hashlib
 
 TIME_REGEX = re.compile(
     r'(\D*(?P<hours>\d+)\s*(hours|hrs|hr|h|Hours|H))*(\D*(?P<minutes>\d+)\s*(minutes|mins|min|m|Minutes|M))*'
 )
+
+def hash_password(password, salt):
+
+    hashed_pw = hashlib.sha512(password.encode() + salt).hexdigest()
+
+    return hashed_pw
 
 def time_step(instruction): # Time to do step in instruction in seconds
     # Time to do action and whether you have to be actively doing the step or 

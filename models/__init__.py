@@ -1,4 +1,4 @@
-from ._utils import time_step
+from ._utils import time_step, hash_password
 from .recipe_scraper.recipe_scrapers import scrape_me
 from .ORM import ORM
 from .user import User

@@ -1,6 +1,8 @@
+from models import scrape_me, hash_password, User, Saved_Recipes, Recipe, Recipe_Directions, Recipe_Ingredients
 from flask import Flask, request, jsonify
+import os
 from flask_cors import CORS
-from models import scrape_me
+
 
 
 # import sys
@@ -29,6 +31,55 @@ def get_recipe_from_url():
         "recipeInstructions": recipe_instructions,
         "recipeImage"       : recipe.image()
     })
+
+@app.route("/create_user", methods = ["POST"])
+def create_user():
+    data = request.get_json()
+
+    if User.select_one(f"""WHERE email = ?""", (data["email"],)):
+        return jsonify({
+            "response" : "Email already in use"
+        })
+    
+    # Salt and hash the password
+    salt = os.urandom(64)
+    hashed_pw = hash_password(data["password"], salt)
+
+    user = User(
+        pk = None,
+        username = data["username"], 
+        password = hashed_pw, 
+        salt = salt, 
+        fname = data["fname"],
+        lname = data["lname"],
+        email=data["email"]
+    )
+    user.save()
+    return jsonify({
+        "response" : "Account successfully created"
+    })
+
+@app.route("/login", methods = ["POST"])
+def authenticate():
+    data = request.get_json()
+
+    user = User.select_one(f"""WHERE username = ?""", (data["username"],))
+    input_password = hash_password(data["password"], user.salt)
+
+    if input_password == user.password:
+        return jsonify({
+            "pk"       : user.pk,
+            "username" : user.username,
+            "password" : data["password"],
+            "fname"    : user.fname,
+            "lname"    : user.lname,
+            "email"    : user.email
+        })
+    else: 
+        return jsonify({
+            "response" : "Username or Password is incorrect"
+        })
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
