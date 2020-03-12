@@ -4,40 +4,51 @@ TIME_REGEX = re.compile(
     r'(\D*(?P<hours>\d+)\s*(hours|hrs|hr|h|Hours|H))*(\D*(?P<minutes>\d+)\s*(minutes|mins|min|m|Minutes|M))*'
 )
 
-def time_step(instruction): # Time to do action in seconds
-    cooking_verbs = {"add"   : 20,
+def time_step(instruction): # Time to do step in instruction in seconds
+    # Time to do action and whether you have to be actively doing the step or 
+    # if you can passively do the step.
+    # The action is the keyword and how long it takes to do the action is the 
+    # value, if the value is 0, you can passively do the step. 
+    # i.e. Boiling vs. Whisking
+    # You can move on to another step while boiling something, but you have
+    # to constantly whisk.
+    cooking_verbs = {"add"     : 20,
                      "arrange" : 120,
-                     "beat"  : 120,
-                     "break" : 60,
-                     "carve" : 180,
-                     "cook"  : 300,
-                     "cut"   : 300,
-                     "dust"  : 20,
-                     "fold"  : 600,
-                     "frost" : 300,
-                     "fry"   : 300,
-                     "grate" : 60,
-                     "grease": 120,
-                     "heat"  : 60,
-                     "melt"  : 120,
-                     "mix"   : 180,
-                     "place" : 15,
-                     "pour"  : 30,
-                     "roll"  : 600,
-                     "reduce": 300,
-                     "rub"   : 300,
-                     "sear"  : 300,
-                     "slice" : 300,
-                     "spread": 180, 
-                     "sprinkle" : 60,
-                     "stir"  : 20,
-                     "strain": 300,
-                     "toast" : 600,
-                     "top"   : 60,
-                     "toss"  : 60,
-                     "trim"  : 120,
-                     "whisk" : 20
-                     }      
+                     "beat"    : 120,
+                     "break"   : 60,
+                     "carve"   : 180,
+                     "cook"    : 300,
+                     "cut"     : 300,
+                     "dust"    : 20,
+                     "fold"    : 600,
+                     "frost"   : 300,
+                     "fry"     : 300,
+                     "grate"   : 60,
+                     "grease"  : 120,
+                     "heat"    : 60,
+                     "mash"    : 60,
+                     "melt"    : 120,
+                     "mix"     : 180,
+                     "place"   : 30,
+                     "pour"    : 30,
+                     "roll"    : 600,
+                     "reduce"  : 300,
+                     "roast"   : 0,
+                     "rub"     : 300,
+                     "sear"    : 300,
+                     "sit"     : 0,
+                     "slice"   : 300,
+                     "spread"  : 180, 
+                     "sprinkle": 30,
+                     "stir"    : 60,
+                     "strain"  : 300,
+                     "toast"   : 600,
+                     "top"     : 60,
+                     "toss"    : 60,
+                     "trim"    : 120,
+                     "whisk"   : 60
+                    }
+    dependency_word = "immediately"
     seconds = 0
 
     for sentence in instruction.split('.'): 

@@ -2,7 +2,7 @@ import requests
 
 from bs4 import BeautifulSoup
 
-from recipe_scrapers._utils import on_exception_return
+from ._utils import on_exception_return
 
 # some sites close their content for 'bots', so user-agent must be supplied
 HEADERS = {

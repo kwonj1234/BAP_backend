@@ -23,7 +23,6 @@ class Delish(AbstractScraper):
             'span',
             {'class': 'total-time-amount'}
         )
-
         return get_minutes(total_time_class)
     
     def yields(self):
@@ -43,15 +42,14 @@ class Delish(AbstractScraper):
             ).find(
                 'img'
             )
-
             return image['data-src'] if image else None
+
         except Exception:
             # If the image is not at the top, it will be found at the
             # bottom of the recipe content div
             image = self.soup.find(
                 'picture'
             )
-
             return image.find('source')['data-srcset'] if image else None
     
     def ingredients(self):
@@ -72,7 +70,6 @@ class Delish(AbstractScraper):
         ).findAll(
             'li'
         )
-
         return '\n'.join([
             normalize_string(instruction.get_text())
             for instruction in instructions

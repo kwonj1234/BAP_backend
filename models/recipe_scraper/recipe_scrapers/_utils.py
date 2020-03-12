@@ -29,7 +29,6 @@ def get_minutes(element):
         if '-' in tstring:
             tstring = tstring.split('-')[1]  # sometimes formats are like this: '12-15 minutes'
         matched = TIME_REGEX.search(tstring)
-        print(matched.groupdict().get('minutes'))
 
         minutes = int(matched.groupdict().get('minutes') or 0)
         minutes += 60 * int(matched.groupdict().get('hours') or 0)
