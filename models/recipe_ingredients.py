@@ -3,7 +3,7 @@ from .ORM import ORM
 
 class Recipe_Ingredients(ORM):
     tablename = "recipe_ingredients"
-    dbpath = "data/recipes.db"
+    dbpath = ""
     fields = ["pk", "name", "amount", "unit", "recipe_pk"]
 
     def __init__(self, **kwargs):

@@ -36,23 +36,30 @@ def get_recipe_from_url():
 def create_user():
     data = request.get_json()
 
-    if User.select_one(f"""WHERE email = ?""", (data["email"],)):
+    # Make sure another user does not have the username
+    if User.no_repeat_username(data["username"]):
         return jsonify({
-            "response" : "Email already in use"
+            "response" : "Username already in use"
+        })
+    
+    # Make sure another user does not have the email
+    if User.no_repeat_email(data["email"]):
+        return jsonify({
+            "response" : "E-mail already in use"
         })
     
     # Salt and hash the password
-    salt = os.urandom(64)
-    hashed_pw = hash_password(data["password"], salt)
+    salt_pw = os.urandom(64)
+    hashed_pw = hash_password(data["password"], salt_pw)
 
     user = User(
         pk = None,
         username = data["username"], 
         password = hashed_pw, 
-        salt = salt, 
+        salt = salt_pw, 
         fname = data["fname"],
         lname = data["lname"],
-        email=data["email"]
+        email = data["email"]
     )
     user.save()
     return jsonify({

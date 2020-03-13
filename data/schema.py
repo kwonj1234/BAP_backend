@@ -8,9 +8,8 @@ def schema(dbpath = DBPATH):
     with sqlite3.connect(dbpath) as connection:
         c = connection.cursor()
 
-        dropsql = """DROP TABLE IF EXISTS ?;"""
-        for table in ["user", "saved_recipes", "recipe", "recipe_ingredients", "recipe_directions", "ingredient", "prep_time"]:
-            c.execute(dropsql, (table))
+        for table in ["user", "recipe", "saved_recipes", "recipe_ingredients", "recipe_directions", "ingredient", "prep_time"]:
+            c.execute(f"""DROP TABLE IF EXISTS {table}""")
 
         # create users table
         sql = """CREATE TABLE user (
@@ -21,15 +20,6 @@ def schema(dbpath = DBPATH):
             fname VARCHAR,
             lname VARCHAR,
             email VARCHAR);"""
-        c.execute(sql)
-
-        # create a saved recipes table for every user
-        sql = """CREATE TABLE saved_recipes (
-            pk INTEGER PRIMARY KEY AUTOINCREMET,
-            user_pk INTEGER,
-            recipe_pk INTEGER,
-            FOREIGN KEY (recipe_pk) REFERENCES recipe.pk,
-            FOREIGN KEY (user_pk) REFERENCES user.pk);"""
         c.execute(sql)
 
         # create recipe book table
@@ -44,6 +34,15 @@ def schema(dbpath = DBPATH):
             total_time INTEGER);"""
         c.execute(sql)
 
+        # create a saved recipes table for every user
+        sql = """CREATE TABLE saved_recipes (
+            pk INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_pk INTEGER,
+            recipe_pk INTEGER,
+            FOREIGN KEY (recipe_pk) REFERENCES recipe(pk),
+            FOREIGN KEY (user_pk) REFERENCES user(pk));"""
+        c.execute(sql)
+
         # create table for ingredients for a recipe
         sql = """CREATE TABLE recipe_ingredients (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +50,7 @@ def schema(dbpath = DBPATH):
             amount FLOAT,
             unit VARCHAR(12),
             recipe_pk INTEGER,
-            FOREIGN KEY (recipe_pk) REFERENCES recipe.pk);"""
+            FOREIGN KEY (recipe_pk) REFERENCES recipe(pk));"""
         c.execute(sql)
 
         # create table for recipe directions
@@ -60,7 +59,7 @@ def schema(dbpath = DBPATH):
             direction TEXT,
             duration INTEGER,
             recipe_pk INTEGER,
-            FOREIGN KEY (recipe_id) REFERENCES recipe.pk);"""
+            FOREIGN KEY (recipe_pk) REFERENCES recipe(pk));"""
         c.execute(sql)
 
         # create ingredients table
@@ -69,3 +68,6 @@ def schema(dbpath = DBPATH):
             name VARCHAR,
             flavor VARCHAR);"""
         c.execute(sql)
+
+if __name__ == "__main__":
+    schema()
