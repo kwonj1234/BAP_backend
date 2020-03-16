@@ -1,14 +1,17 @@
 import re, hashlib
+from random import random
 
 TIME_REGEX = re.compile(
     r'(\D*(?P<hours>\d+)\s*(hours|hrs|hr|h|Hours|H))*(\D*(?P<minutes>\d+)\s*(minutes|mins|min|m|Minutes|M))*'
 )
 
 def hash_password(password, salt):
-
     hashed_pw = hashlib.sha512(password.encode() + salt).hexdigest()
-
     return hashed_pw
+
+def generate_token():
+    seed = str(random())
+    return hashlib.sha256(seed.encode()).hexdigest()[:32]
 
 def time_step(instruction): # Time to do step in instruction in seconds
     # Time to do action and whether you have to be actively doing the step or 
@@ -56,26 +59,25 @@ def time_step(instruction): # Time to do step in instruction in seconds
                     }
     dependency_word = "immediately"
     seconds = 0
+ 
+    # If the sentence tells you how many hours or minutes to do 
+    # the step, time to do the action described in the sentence
+    # will be that specified time. Else it will be guessed from 
+    # the verbs in the sentence
 
-    for sentence in instruction.split('.'): 
-        # If the sentence tells you how many hours or minutes to do 
-        # the step, time to do the action described in the sentence
-        # will be that specified time. Else it will be guessed from 
-        # the verbs in the sentence
+    # Find the numbers preceding instances of "hours" and "minutes"
+    matched = TIME_REGEX.search(instruction)
 
-        # Find the numbers preceding instances of "hours" and "minutes"
-        matched = TIME_REGEX.search(sentence)
+    # If the step does not tell you how long it will take, guess
+    # from the verbs used in the sentence.
+    if matched.groupdict().get('minutes') is None and matched.groupdict().get('hours') is None:
+        
+        for word in instruction.split():
+            if word in cooking_verbs.keys():
+                seconds += cooking_verbs[word.lower()]
 
-        # If the step does not tell you how long it will take, guess
-        # from the verbs used in the sentence.
-        if matched.groupdict().get('minutes') is None and matched.groupdict().get('hours') is None:
-            
-            for word in sentence.split():
-                if word in cooking_verbs.keys():
-                    seconds += cooking_verbs[word.lower()]
-
-        else:
-            seconds += 60 * int(matched.groupdict().get('minutes') or 0)
-            seconds += 3600 * int(matched.groupdict().get('hours') or 0)
+    else:
+        seconds += 60 * int(matched.groupdict().get('minutes') or 0)
+        seconds += 3600 * int(matched.groupdict().get('hours') or 0)
 
     return seconds    

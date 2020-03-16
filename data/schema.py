@@ -8,18 +8,19 @@ def schema(dbpath = DBPATH):
     with sqlite3.connect(dbpath) as connection:
         c = connection.cursor()
 
-        for table in ["user", "recipe", "saved_recipes", "recipe_ingredients", "recipe_directions", "ingredient", "prep_time"]:
+        for table in ["user", "recipe", "saved_recipes", "recipe_ingredients", "recipe_instructions", "ingredient", "prep_time"]:
             c.execute(f"""DROP TABLE IF EXISTS {table}""")
 
         # create users table
         sql = """CREATE TABLE user (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
             username VARCHAR,
-            password VARCHAR(256),
+            password VARCHAR(512),
             salt VARCHAR,
             fname VARCHAR,
             lname VARCHAR,
-            email VARCHAR);"""
+            email VARCHAR,
+            token VARCHAR(64));"""
         c.execute(sql)
 
         # create recipe book table
@@ -27,18 +28,19 @@ def schema(dbpath = DBPATH):
         sql = """CREATE TABLE recipe (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
             name VARCHAR,
-            url VARCHAR,
+            source VARCHAR,
             culture VARCHAR,
             img_path VARCHAR,
-            serving_size INTEGER
-            total_time INTEGER);"""
+            serving_size INTEGER,
+            total_time INTEGER,
+            ingredients TEXT);"""
         c.execute(sql)
 
         # create a saved recipes table for every user
         sql = """CREATE TABLE saved_recipes (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
             user_pk INTEGER,
-            recipe_pk INTEGER,
+            recipe_pk VARCHAR,
             FOREIGN KEY (recipe_pk) REFERENCES recipe(pk),
             FOREIGN KEY (user_pk) REFERENCES user(pk));"""
         c.execute(sql)
@@ -54,9 +56,9 @@ def schema(dbpath = DBPATH):
         c.execute(sql)
 
         # create table for recipe directions
-        sql = """CREATE TABLE recipe_directions (
+        sql = """CREATE TABLE recipe_instructions (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
-            direction TEXT,
+            instruction TEXT,
             duration INTEGER,
             recipe_pk INTEGER,
             FOREIGN KEY (recipe_pk) REFERENCES recipe(pk));"""

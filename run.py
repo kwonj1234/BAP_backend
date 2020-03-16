@@ -1,10 +1,17 @@
 import os 
-from models import ORM
 from flask_app import app
+from models import ORM, Recipe, User, Saved_Recipes
+
 
 PATH = os.path.dirname(__file__)
 DBPATH = os.path.join(PATH, "data", "recipes.db")
 
 ORM.dbpath = DBPATH
+Recipe.dbpath = DBPATH
+# Recipe_Directions.dbpath = DBPATH
+# Recipe_Ingredients.dbpath = DBPATH
+User.dbpath = DBPATH
+Saved_Recipes.dbpath = DBPATH
 
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
