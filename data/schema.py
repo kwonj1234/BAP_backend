@@ -40,7 +40,7 @@ def schema(dbpath = DBPATH):
         sql = """CREATE TABLE saved_recipes (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
             user_pk INTEGER,
-            recipe_pk VARCHAR,
+            recipe_pk INTEGER,
             FOREIGN KEY (recipe_pk) REFERENCES recipe(pk),
             FOREIGN KEY (user_pk) REFERENCES user(pk));"""
         c.execute(sql)
@@ -55,7 +55,7 @@ def schema(dbpath = DBPATH):
             FOREIGN KEY (recipe_pk) REFERENCES recipe(pk));"""
         c.execute(sql)
 
-        # create table for recipe directions
+        # create table for recipe instructions
         sql = """CREATE TABLE recipe_instructions (
             pk INTEGER PRIMARY KEY AUTOINCREMENT,
             instruction TEXT,

@@ -87,37 +87,49 @@ def token_auth(token):
         "lname"    : user.lname,
         "token"    : user.token
     }
-
     # Get user saved recipes    
-    user_recipes = {}
-
+    # Initalize list. This list will be a list of dictionaries
+    user_recipes = []
     saved_recipes = Saved_Recipes.select_all(
         """WHERE user_pk = ?""",
         (user.pk,)
     )
-    
     for saved_recipe in saved_recipes:
-        recipe = Recipe.select_one("""WHERE pk = ?""", (saved_recipe.recipe_pk))
+        # Get recipe from database used recipe_pk in saved_recipe table
+        recipe = Recipe.select_one("""WHERE pk = ?""", (saved_recipe[2],))
+
+        # Initalize a list for the recipe instructions
+        recipe_instructions = []
+        # Get all instructions for this recipe
+        instructions = Recipe_Instructions.select_all(
+            """WHERE recipe_pk = ? ORDER BY pk ASC""", (recipe.pk,)
+        )
+        # For every step in the instructions, organize it to send 
+        # to frontend and append to instructions
+        for each_step in instructions:
+            # each_step[0] - pk
+            # each_step[1] - instruction
+            # each_step[2] - duration
+            # each_step[3] - recipe_pk
+            step = [each_step[2], each_step[1]]
+            recipe_instructions.append(step)
+        
         # make ingredients text into a list of lists
+        # REMEMBER ingredients are separated by newline characters
         recipe_ingredients = [
-            ingredient for ingredient in recipe.recipe_ingredients.split("\n")
+            ingredient for ingredient in recipe.ingredients.split("\n")
         ]
-        user_recipes[recipe.name] = {
+        # Append dictionary of recipe data to list of recipes, 
+        # initalize list for instructions
+        user_recipes.append({
             "name"        : recipe.name,
             "time"        : recipe.total_time,
             "yields"      : recipe.serving_size,
             "ingredients" : recipe_ingredients,
-            "instructions": [],
+            "instructions": recipe_instructions,
             "image"       : recipe.img_path,
             "url"         : recipe.source
-        }
-        
-        instructions = Recipe_Instructions.select_all(
-            """WHERE recipe_pk = ? ORDER BY pk ASC""", (recipe.pk,)
-        )
-        for each_step in instructions:
-            step = [each_step.duration, each_step.instruction]
-            user_recipes[recipe.name]["instructions"].append(step)
+        })
     
     return jsonify({
         "userData"   : user_data,
@@ -158,7 +170,6 @@ def get_recipe_from_url():
 @app.route("/save_recipe_to_user", methods = ["POST"])
 def save_recipe_to_user():
     data = request.get_json()
-
     # Check if recipe is already in database
     if Recipe.no_repeat_recipe(data["recipe"]["url"]):
         recipe = Recipe.select_one(
@@ -166,10 +177,13 @@ def save_recipe_to_user():
             (data["recipe"]["url"],)
         )
     else:
+        # Turn list of ingredients into single block of text separated
+        # by new line characters so that it can be easily saved into 
+        # the database
         recipe_ingredients_text = "\n".join(
             data["recipe"]["ingredients"]
         )
-
+        # Create recipe class then save it
         recipe = Recipe(
             pk = None, 
             name = data["recipe"]["name"], 
@@ -178,15 +192,17 @@ def save_recipe_to_user():
             img_path = data["recipe"]["image"],
             serving_size = data["recipe"]["yields"],
             total_time = data["recipe"]["time"],
-            recipe_ingredients = recipe_ingredients_text
+            ingredients = recipe_ingredients_text
         )
         recipe.save()
-
+        # Reach into database and pull the same recipe that you just saved
+        # so that this one has the pk
         recipe = Recipe.select_one(
             """WHERE source = ?""", 
             (data["recipe"]["url"],)
         )
-
+        # Use the recipe pk to save the recipe's instructions into the 
+        # instructions table
         for instruction in data["recipe"]["instructions"]:
             recipe_instruction = Recipe_Instructions(
                 pk = None,
@@ -195,7 +211,13 @@ def save_recipe_to_user():
                 recipe_pk = recipe.pk
             )
             recipe_instruction.save()
-
+    # If recipe is already saved to this user send this response
+    if Saved_Recipes.no_repeat_saves(data["userPk"], recipe.pk):
+        return jsonify({
+            "response" : "Recipe is already in your RecipeBox"
+        })
+    # If recipe is not saved to the user, create an entry in
+    # saved_recipes table
     save_recipe_to_user = Saved_Recipes(
         pk = None, 
         user_pk = data["userPk"],
@@ -206,7 +228,6 @@ def save_recipe_to_user():
     return jsonify({
         "response" : "Recipe saved"
     })
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
