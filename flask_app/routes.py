@@ -106,6 +106,7 @@ def token_auth(token):
         )
         # For every step in the instructions, organize it to send 
         # to frontend and append to instructions
+        total_time = 0
         for each_step in instructions:
             # each_step[0] - pk
             # each_step[1] - instruction
@@ -113,12 +114,18 @@ def token_auth(token):
             # each_step[3] - recipe_pk
             step = [each_step[2], each_step[1]]
             recipe_instructions.append(step)
+            total_time += each_step[2]
         
         # make ingredients text into a list of lists
         # REMEMBER ingredients are separated by newline characters
         recipe_ingredients = [
             ingredient for ingredient in recipe.ingredients.split("\n")
         ]
+        # If the scraped website does not provide an estimation on time it
+        # takes to finish the recipe, use the estimated time for each step
+        # and sum it to create an estimation
+        if recipe.total_time == 0:
+            recipe.total_time = total_time
         # Append dictionary of recipe data to list of recipes, 
         # initalize list for instructions
         user_recipes.append({
@@ -153,7 +160,8 @@ def get_recipe_from_url():
 
     # Get rid of blank spaces
     recipe_instructions = [
-        instruction for instruction in recipe.instructions().split('\n')
+        [time_step(instruction), instruction] 
+        for instruction in recipe.instructions().split('\n')
         if len(instruction) > 0
     ]
     
@@ -206,8 +214,8 @@ def save_recipe_to_user():
         for instruction in data["recipe"]["instructions"]:
             recipe_instruction = Recipe_Instructions(
                 pk = None,
-                instruction = instruction,
-                duration = time_step(instruction),
+                instruction = instruction[1],
+                duration = instruction[0],
                 recipe_pk = recipe.pk
             )
             recipe_instruction.save()
