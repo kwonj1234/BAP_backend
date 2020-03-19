@@ -2,7 +2,7 @@ import re, hashlib
 from random import random
 
 TIME_REGEX = re.compile(
-    r'(\D*(?P<hours>\d+)\s*(hours|hrs|hr|h|Hours|H))*(\D*(?P<minutes>\d+)\s*(minutes|mins|min|m|Minutes|M))*'
+    r'(\D*(?P<hours>\d+)\s*(hour|hours|hrs|hr|h|Hour|Hours|H))*(\D*(?P<minutes>\d+)\s*(minute|minutes|mins|min|m|Minute|Minutes|M))*'
 )
 
 def hash_password(password, salt):
@@ -39,6 +39,7 @@ def time_step(instruction): # Time to do step in instruction in seconds
                      "melt"    : 120,
                      "mix"     : 180,
                      "place"   : 30,
+                     "pulse"   : 90,
                      "pour"    : 30,
                      "roll"    : 600,
                      "reduce"  : 300,
@@ -65,19 +66,25 @@ def time_step(instruction): # Time to do step in instruction in seconds
     # will be that specified time. Else it will be guessed from 
     # the verbs in the sentence
 
-    # Find the numbers preceding instances of "hours" and "minutes"
-    matched = TIME_REGEX.search(instruction)
-
-    # If the step does not tell you how long it will take, guess
-    # from the verbs used in the sentence.
-    if matched.groupdict().get('minutes') is None and matched.groupdict().get('hours') is None:
-        
-        for word in instruction.split():
-            if word in cooking_verbs.keys():
-                seconds += cooking_verbs[word.lower()]
-
-    else:
-        seconds += 60 * int(matched.groupdict().get('minutes') or 0)
-        seconds += 3600 * int(matched.groupdict().get('hours') or 0)
-
+    # Separate each sentence in the instruction. 
+    instruction = instruction.split(".")
+    # Analyze each sentence in instruction. Remember, instruction is actually
+    # just one step in the full list of instructions
+    for sentence in instruction:
+        # The regex statement will only detect one instance of minutes or hours.
+        # Assume each step in the instructions describes time once in each 
+        # sentence.
+        if "minute" in sentence or "hour" in sentence:
+            # Sometimes the times is separated by a dash, we don't want that
+            sentence = re.split('–|-\+', sentence)
+            for portion in instruction:
+                matched = TIME_REGEX.search(portion)
+                seconds += 60 * int(matched.groupdict().get('minutes') or 0)
+                seconds += 3600 * int(matched.groupdict().get('hours') or 0)
+        # If the step does not tell you how long it will take, guess
+        # from the verbs used in the sentence.
+        else:
+            for word in sentence.split():
+                if word in cooking_verbs.keys():
+                    seconds += cooking_verbs[word.lower()]
     return seconds    

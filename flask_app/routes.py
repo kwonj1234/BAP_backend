@@ -130,7 +130,7 @@ def token_auth(token):
         # initalize list for instructions
         user_recipes.append({
             "name"        : recipe.name,
-            "time"        : recipe.total_time,
+            "time"        : recipe.total_time//60,
             "yields"      : recipe.serving_size,
             "ingredients" : recipe_ingredients,
             "instructions": recipe_instructions,
@@ -165,9 +165,18 @@ def get_recipe_from_url():
         if len(instruction) > 0
     ]
     
+    if recipe.total_time() == 0:
+        total_time = sum(
+            # Divide by 60 because time is in seconds but the frontend will
+            # display time in hours and minutes
+            [instruction[0] for instruction in recipe_instructions]
+        )//60
+    else:
+        total_time = recipe.total_time()
+
     return jsonify({
-        "name"       : recipe.title(),
-        "time"        : recipe.total_time(),
+        "name"        : recipe.title(),
+        "time"        : total_time,
         "yields"      : recipe.yields(),
         "ingredients" : recipe.ingredients(),
         "instructions": recipe_instructions,
@@ -192,6 +201,7 @@ def save_recipe_to_user():
             data["recipe"]["ingredients"]
         )
         # Create recipe class then save it
+        # Remember in the database, time is in seconds
         recipe = Recipe(
             pk = None, 
             name = data["recipe"]["name"], 
@@ -199,7 +209,7 @@ def save_recipe_to_user():
             culture = "",
             img_path = data["recipe"]["image"],
             serving_size = data["recipe"]["yields"],
-            total_time = data["recipe"]["time"],
+            total_time = data["recipe"]["time"]*60, 
             ingredients = recipe_ingredients_text
         )
         recipe.save()
@@ -235,6 +245,22 @@ def save_recipe_to_user():
 
     return jsonify({
         "response" : "Recipe saved"
+    })
+
+@app.route("/plan_meal", methods = ["POST"])
+def plan_meal():
+    data = request.get_json()
+    # Sort recipes by their total time to finish
+    data["planMeal"].sort(key=lambda recipe: recipe["time"], reverse=True)
+    # Initialize a list to insert instructions into
+    instructions = []
+
+    for recipe in data["planMeal"]:
+        for instruction in recipe["instructions"]:
+            instructions.append(instruction)
+
+    return jsonify({
+        "response" : instructions
     })
 
 if __name__ == "__main__":
