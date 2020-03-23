@@ -129,6 +129,7 @@ def token_auth(token):
         # Append dictionary of recipe data to list of recipes, 
         # initalize list for instructions
         user_recipes.append({
+            "pk"          : recipe.pk,
             "name"        : recipe.name,
             "time"        : recipe.total_time//60,
             "yields"      : recipe.serving_size,
@@ -193,6 +194,7 @@ def save_recipe_to_user():
             """WHERE source = ?""", 
             (data["recipe"]["url"],)
         )
+    # If the recipe is not in the database, save it to database
     else:
         # Turn list of ingredients into single block of text separated
         # by new line characters so that it can be easily saved into 
@@ -247,6 +249,18 @@ def save_recipe_to_user():
         "response" : "Recipe saved"
     })
 
+@app.route("/delete_recipe_from_user", methods = ["POST"])
+def delete_recipe_from_user():
+    data = request.get_json()
+    saved_recipe = Saved_Recipes.select_one(
+        """WHERE user_pk = ? and recipe_pk = ?""",
+        (data["user_pk"], data["recipe_pk"])
+    )
+    saved_recipe.delete()
+    return jsonify({
+        "response" : ""
+    })
+
 @app.route("/plan_meal", methods = ["POST"])
 def plan_meal():
     data = request.get_json()
@@ -254,10 +268,47 @@ def plan_meal():
     data["planMeal"].sort(key=lambda recipe: recipe["time"], reverse=True)
     # Initialize a list to insert instructions into
     instructions = []
+    # Reference recipe instructions that all other recipes instructions 
+    # will be sorted into
+    reference = data["planMeal"][0]["instructions"]
+    # Instructions for the all other recipes
+    others = [recipe["instructions"] 
+        for recipe in data["planMeal"] 
+        if recipe != data["planMeal"][0]
+    ]
+    # a list of indexes for every recipe in that was sent over except for
+    # reference recipe
+    indexes = [len(instructions)-1 for instructions in others]
 
-    for recipe in data["planMeal"]:
-        for instruction in recipe["instructions"]:
-            instructions.append(instruction)
+    # Start sorting from the last step 
+    for i in range(len(reference) - 1, -1, -1):
+        # Set how long this step takes
+        duration_step = reference[i][0]
+        for j in range(len(others)):
+            # If for that recipe you've gone through the entire list of 
+            # instructions just pass
+            if indexes[j] == -1:
+                pass
+            else:
+                # Translation
+                # While the duration for the step in the reference recipe is
+                # greater than the duration in the target recipe append the 
+                # instruction from the target recipe
+                while (duration_step > others[j][indexes[j]][0]) and (indexes[j] > -1):
+                    instructions.insert(0, others[j][indexes[j]])
+                    # Subtract time taken for total time for moving on to next 
+                    # step
+                    duration_step -= others[j][indexes[j]][0]
+                    # Move on to the next step in target recipe
+                    indexes[j] -= 1
+        # Add the instructions from the reference recipe
+        instructions.insert(0, reference[i])
+        # If the reference recipe is completed add the recipe of the instructions
+        if i == 0:
+            for j in range(len(others)):
+                while indexes[j] > -1:
+                    instructions.insert(0, others[j][indexes[j]])
+                    indexes[j] -= 1
 
     return jsonify({
         "response" : instructions
