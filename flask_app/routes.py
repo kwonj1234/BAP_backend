@@ -1,5 +1,6 @@
 from models import scrape_me, hash_password, generate_token, time_step, User, Saved_Recipes, Recipe, Recipe_Instructions
 from flask import Flask, request, jsonify
+import math
 import os
 from flask_cors import CORS
 
@@ -266,52 +267,76 @@ def plan_meal():
     data = request.get_json()
     # Sort recipes by their total time to finish
     data["planMeal"].sort(key=lambda recipe: recipe["time"], reverse=True)
-    # Initialize a list to insert instructions into
+    # Initialize a list to insert instructions into and recipes
     instructions = []
-    # Reference recipe instructions that all other recipes instructions 
-    # will be sorted into
-    reference = data["planMeal"][0]["instructions"]
-    # Instructions for the all other recipes
-    others = [recipe["instructions"] 
-        for recipe in data["planMeal"] 
-        if recipe != data["planMeal"][0]
-    ]
-    # a list of indexes for every recipe in that was sent over except for
-    # reference recipe
-    indexes = [len(instructions)-1 for instructions in others]
+    recipes = []
+    # Total time for recipe will be recipe that takes longest. In the sorted
+    # list, it will be the first recipe
+    time = data["planMeal"][0]["time"]*60
+    # For each instruction in each recipe add the time step where the 
+    # instruction is done and add it to the list of instructions then
+    # sort the list of instruction by the time step
+    for i in range(len(data["planMeal"])):
+        recipe = {}
+        recipe["index"] = i
+        recipe["name"] = data["planMeal"][i]["name"]
+        recipes.append(recipe)
+        time_difference = 0
+        recipe = data["planMeal"][i]
+        for j in range(len(recipe["instructions"])-1, -1, -1):
+            instruction = {}
+            time_difference += recipe["instructions"][j][0]
+            instruction["timeStep"] = math.ceil((time - time_difference)/60)
+            instruction["duration"] = recipe["instructions"][j][0]
+            instruction["instruction"] = recipe["instructions"][j][1]
+            instruction["recipe_index"] = i
+            instructions.append(instruction)
+    instructions.sort(key=lambda instruction: instruction["timeStep"])
+    # # Reference recipe instructions that all other recipes instructions 
+    # # will be sorted into
+    # reference = data["planMeal"][0]["instructions"]
+    # # Instructions for the all other recipes
+    # others = [recipe["instructions"] 
+    #     for recipe in data["planMeal"] 
+    #     if recipe != data["planMeal"][0]
+    # ]
+    # # a list of indexes for every recipe in that was sent over except for
+    # # reference recipe
+    # indexes = [len(instructions)-1 for instructions in others]
 
-    # Start sorting from the last step 
-    for i in range(len(reference) - 1, -1, -1):
-        # Set how long this step takes
-        duration_step = reference[i][0]
-        for j in range(len(others)):
-            # If for that recipe you've gone through the entire list of 
-            # instructions just pass
-            if indexes[j] == -1:
-                pass
-            else:
-                # Translation
-                # While the duration for the step in the reference recipe is
-                # greater than the duration in the target recipe append the 
-                # instruction from the target recipe
-                while (duration_step > others[j][indexes[j]][0]) and (indexes[j] > -1):
-                    instructions.insert(0, others[j][indexes[j]])
-                    # Subtract time taken for total time for moving on to next 
-                    # step
-                    duration_step -= others[j][indexes[j]][0]
-                    # Move on to the next step in target recipe
-                    indexes[j] -= 1
-        # Add the instructions from the reference recipe
-        instructions.insert(0, reference[i])
-        # If the reference recipe is completed add the recipe of the instructions
-        if i == 0:
-            for j in range(len(others)):
-                while indexes[j] > -1:
-                    instructions.insert(0, others[j][indexes[j]])
-                    indexes[j] -= 1
+    # # Start sorting from the last step 
+    # for i in range(len(reference) - 1, -1, -1):
+    #     # Set how long this step takes
+    #     duration_step = reference[i][0]
+    #     for j in range(len(others)):
+    #         # If for that recipe you've gone through the entire list of 
+    #         # instructions just pass
+    #         if indexes[j] == -1:
+    #             pass
+    #         else:
+    #             # Translation
+    #             # While the duration for the step in the reference recipe is
+    #             # greater than the duration in the target recipe append the 
+    #             # instruction from the target recipe
+    #             while (duration_step > others[j][indexes[j]][0]) and (indexes[j] > -1):
+    #                 instructions.insert(0, others[j][indexes[j]])
+    #                 # Subtract time taken for total time for moving on to next 
+    #                 # step
+    #                 duration_step -= others[j][indexes[j]][0]
+    #                 # Move on to the next step in target recipe
+    #                 indexes[j] -= 1
+    #     # Add the instructions from the reference recipe
+    #     instructions.insert(0, reference[i])
+    #     # If the reference recipe is completed add the recipe of the instructions
+    #     if i == 0:
+    #         for j in range(len(others)):
+    #             while indexes[j] > -1:
+    #                 instructions.insert(0, others[j][indexes[j]])
+    #                 indexes[j] -= 1
 
     return jsonify({
-        "response" : instructions
+        "recipes"      : recipes,
+        "instructions" : instructions
     })
 
 if __name__ == "__main__":
