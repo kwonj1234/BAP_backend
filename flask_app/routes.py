@@ -269,24 +269,22 @@ def plan_meal():
     data["planMeal"].sort(key=lambda recipe: recipe["time"], reverse=True)
     # Initialize a list to insert instructions into and recipes
     instructions = []
-    recipes = []
+    recipe_names = []
     # Total time for recipe will be recipe that takes longest. In the sorted
     # list, it will be the first recipe
     time = data["planMeal"][0]["time"]*60
     # For each instruction in each recipe add the time step where the 
     # instruction is done and add it to the list of instructions then
     # sort the list of instruction by the time step
-    print(time)
     for i in range(len(data["planMeal"])):
-        recipe = {}
-        recipe["index"] = i
-        recipe["name"] = data["planMeal"][i]["name"]
-        recipes.append(recipe)
+        recipe_name = {}
+        recipe_name["index"] = i
+        recipe_name["name"] = data["planMeal"][i]["name"]
+        recipe_names.append(recipe_name)
         time_difference = 0
         recipe = data["planMeal"][i]
         for j in range(len(recipe["instructions"])-1, -1, -1):
             instruction = {}
-            print(recipe["name"], recipe["instructions"][j][0])
             time_difference += recipe["instructions"][j][0]
             instruction["timeStep"] = math.ceil((time - time_difference)/60)
             instruction["duration"] = recipe["instructions"][j][0]
@@ -296,7 +294,7 @@ def plan_meal():
     instructions.sort(key=lambda instruction: instruction["timeStep"])
 
     return jsonify({
-        "recipes"      : recipes,
+        "recipes"      : recipe_names,
         "instructions" : instructions
     })
 
