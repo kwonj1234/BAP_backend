@@ -137,7 +137,8 @@ def token_auth(token):
             "ingredients" : recipe_ingredients,
             "instructions": recipe_instructions,
             "image"       : recipe.img_path,
-            "url"         : recipe.source
+            "url"         : recipe.source,
+            "edited"      : recipe.edited
         })
     
     return jsonify({
@@ -166,7 +167,6 @@ def get_recipe_from_url():
         for instruction in recipe.instructions().split('\n')
         if len(instruction) > 0
     ]
-    print(recipe_instructions)
     if recipe.total_time() == 0:
         total_time = sum(
             # Divide by 60 because time is in seconds but the frontend will
@@ -213,7 +213,8 @@ def save_recipe_to_user():
             img_path = data["recipe"]["image"],
             serving_size = data["recipe"]["yields"],
             total_time = data["recipe"]["time"]*60, 
-            ingredients = recipe_ingredients_text
+            ingredients = recipe_ingredients_text,
+            edited = 0
         )
         recipe.save()
         # Reach into database and pull the same recipe that you just saved
@@ -267,9 +268,10 @@ def plan_meal():
     data = request.get_json()
     # Sort recipes by their total time to finish
     data["planMeal"].sort(key=lambda recipe: recipe["time"], reverse=True)
-    # Initialize a list to insert instructions into and recipes
+    # Initialize a list to insert instructions, recipes, and ingredients
     instructions = []
     recipe_names = []
+    ingredients = []
     # Total time for recipe will be recipe that takes longest. In the sorted
     # list, it will be the first recipe
     time = data["planMeal"][0]["time"]*60
@@ -277,12 +279,19 @@ def plan_meal():
     # instruction is done and add it to the list of instructions then
     # sort the list of instruction by the time step
     for i in range(len(data["planMeal"])):
+        # add recipe name in recipe_names
         recipe_name = {}
         recipe_name["index"] = i
         recipe_name["name"] = data["planMeal"][i]["name"]
         recipe_names.append(recipe_name)
         time_difference = 0
         recipe = data["planMeal"][i]
+        # add ingredients into ingredients list with recipe index
+        for j in range(len(recipe["ingredients"])):
+            ingredient = {}
+            ingredient["ingredient"] = recipe["ingredients"][j]
+            ingredient["recipe_index"] = i
+            ingredients.append(ingredient)
         for j in range(len(recipe["instructions"])-1, -1, -1):
             instruction = {}
             time_difference += recipe["instructions"][j][0]
@@ -295,7 +304,8 @@ def plan_meal():
 
     return jsonify({
         "recipes"      : recipe_names,
-        "instructions" : instructions
+        "instructions" : instructions,
+        "ingredients"  : ingredients
     })
 
 if __name__ == "__main__":

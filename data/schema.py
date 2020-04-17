@@ -33,7 +33,8 @@ def schema(dbpath = DBPATH):
             img_path VARCHAR,
             serving_size INTEGER,
             total_time INTEGER,
-            ingredients TEXT);"""
+            ingredients TEXT,
+            edited BOOL);"""
         c.execute(sql)
 
         # create a saved recipes table for every user

@@ -15,7 +15,7 @@ class Recipe(ORM):
         self.serving_size = kwargs.get("serving_size")
         self.total_time = kwargs.get("total_time")
         self.ingredients = kwargs.get("ingredients")
-    
+        self.edited = kwargs.get("edited")
     @classmethod
     def no_repeat_recipe(cls, source):
         with sqlite3.connect(cls.dbpath) as conn:
