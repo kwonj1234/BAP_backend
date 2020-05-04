@@ -6,7 +6,7 @@ This project uses the [recipe-scrapers tool](https://github.com/hhursev/recipe-s
 You can view a demo of BAP [here](https://www.youtube.com/watch?v=R9Tdp4Y7H8A&feature=youtu.be).
 
 ## Set Up BAP
-You can find the frontend code for recipedex [here](https://github.com/kwonj1234/recipedex_frontend.git).
+You can find the frontend code for recipedex [here](https://github.com/kwonj1234/recipedex_frontend).
 
 Assuming you have both [Node.js](https://nodejs.org/en/) and [Flask](https://flask.palletsprojects.com/en/1.1.x/installation/#installation) installed.
 
