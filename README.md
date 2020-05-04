@@ -10,7 +10,7 @@ You can try out RecipeDex at recipedex.net from 10am - 6pm while servers are run
 
 OR 
 
-You can find the backend code for RecipeDex [here](https://github.com/kwonj1234/recipedex_backend). Run the following lines of code to start up a Flask server locally and use recipedex.net that way.
+You can find the fronend code for RecipeDex [here](https://github.com/kwonj1234/recipedex_frontend). Run the following lines of code to start up a Flask server locally and use recipedex.net that way.
 
     git clone https://github.com/kwonj1234/recipedex_backend.git &&
     cd recipedex_backend &&
