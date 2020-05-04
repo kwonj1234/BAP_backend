@@ -3,7 +3,7 @@ This project uses [Flask](https://flask.palletsprojects.com/en/1.1.x/installatio
 This project uses the [recipe-scrapers tool](https://github.com/hhursev/recipe-scrapers).
 
 ## RecipeDex
-A simple web scraping application that allows users to create an account, scrape recipes from 56 different websites and save those recipes to their account so that they can view it in the future. RecipeDex also provides a "Plan a Meal" function that allows users to create a list of recipes they would like to cook and create an aggregated list of instructions such that the recipes will finish at the same time.
+A web scraping application that allows users to create an account, scrape recipes from 56 different websites and save those recipes to their account so that they can view it in the future. RecipeDex also provides a "Plan a Meal" function that allows users to create a list of recipes they would like to cook and create an aggregated list of instructions such that the recipes will finish at the same time.
 
 ## Set Up RecipeDex
 You can try out RecipeDex at recipedex.net from 10am - 6pm while servers are running.
